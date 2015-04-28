@@ -271,6 +271,7 @@ class Client(object):
 
         # Base modes
         self.mode_i("+", None)
+        self.mode_w("+", None)
         self.mode_x("+", None)
 
         self._server.log.custom("AUTHORISED", self.get_identifier())
@@ -776,6 +777,15 @@ class Client(object):
         elif "i" in self.modes and mode == "-":
             self.modes.remove("i")
             return self.broadcast_modes("-i")
+
+    # MODE: "w"
+    def mode_w(self, mode, arguments):
+        if "w" not in self.modes and mode == "+":
+            self.modes.append("w")
+            return self.broadcast_modes("+w")
+        elif "w" in self.modes and mode == "-":
+            self.modes.remove("w")
+            return self.broadcast_modes("-w")
 
     # MODE: "x"
     def mode_x(self, mode, arguments):

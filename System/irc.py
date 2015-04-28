@@ -1,6 +1,7 @@
 class IRC(object):
     client_modes = {
         "i": 0,
+        "w": 0,
         "x": 0
     }
 
