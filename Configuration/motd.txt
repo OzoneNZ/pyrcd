@@ -1,0 +1,3 @@
+Hello, this is the Mesage of the Day.
+
+Not much to say here.

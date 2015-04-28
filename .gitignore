@@ -1,0 +1,5 @@
+.idea
+Configuration/pyrcd.json
+Logs/*
+Modules/colorama/__pycache__
+System/__pycache__

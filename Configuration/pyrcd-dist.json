@@ -1,0 +1,16 @@
+{
+  "bind": {
+    "address": "127.0.0.1",
+    "port": 6667
+  },
+
+  "server": {
+    "debug": 3,
+    "fqdn": "irc.localhost",
+    "name": "pyrcd daemon",
+    "client_limit": 10,
+    "recv_buffer": 512,
+    "motd": "motd.txt",
+    "rules": "rules.txt"
+  }
+}
