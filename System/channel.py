@@ -1,3 +1,5 @@
+from System.irc import *
+
 import time
 
 
@@ -44,18 +46,16 @@ class Channel(object):
         for channel_client in self.clients:
             channel_client.write(join_string)
 
-            if "q" in channel_client.channel_modes[self.name]:
-                names.append("~" + channel_client.get_identifier())
-            elif "a" in channel_client.channel_modes[self.name]:
-                names.append("&" + channel_client.get_identifier())
-            elif "o" in channel_client.channel_modes[self.name]:
-                names.append("@" + channel_client.get_identifier())
-            elif "h" in channel_client.channel_modes[self.name]:
-                names.append("%" + channel_client.get_identifier())
-            elif "v" in channel_client.channel_modes[self.name]:
-                names.append("+" + channel_client.get_identifier())
-            else:
-                names.append(channel_client.get_identifier())
+            for power in IRC.channel_power_symbols:
+                print(power, IRC.channel_powers[power])
+
+                # Power found
+                if power in channel_client.channel_modes[self.name]:
+                    names.append(IRC.channel_powers[power] + channel_client.get_identifier())
+                    break
+                # Client has no power
+                elif power == "v":
+                    names.append(channel_client.get_identifier())
 
         if self.topic["author"] is not None:
             client.num_332_channel_topic(self.name, self.topic["content"])

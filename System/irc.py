@@ -4,6 +4,16 @@ class IRC(object):
         "x": 0
     }
 
+    channel_power_symbols = ["q", "a", "o", "h", "v"]
+
+    channel_powers = {
+        "q": "~",
+        "a": "&",
+        "o": "@",
+        "h": "%",
+        "v": "+"
+    }
+
     @staticmethod
     def nick_valid(nick):
         characters = "abcdefghijklmonpqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_\\[]{}^`"
