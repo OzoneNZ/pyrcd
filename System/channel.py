@@ -47,8 +47,6 @@ class Channel(object):
             channel_client.write(join_string)
 
             for power in IRC.channel_power_symbols:
-                print(power, IRC.channel_powers[power])
-
                 # Power found
                 if power in channel_client.channel_modes[self.name]:
                     names.append(IRC.channel_powers[power] + channel_client.get_identifier())
