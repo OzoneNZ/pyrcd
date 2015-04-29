@@ -573,18 +573,18 @@ class Client(object):
             self.num_461_more_parameters("MODE")
         # Channel
         elif arguments[0][0] == "#":
-            # User is asking for modes of the channel
-            if len(arguments) == 1:
-                arguments[0] = arguments[0].lower()
+            arguments[0] = arguments[0].lower()
 
-                if arguments[0] in self.channels:
+            if arguments[0] in self.channels:
+                # User is asking for modes of the channel
+                if len(arguments) == 1:
                     self.num_324_channel_modes(arguments[0])
                     self.num_329_channel_creation(arguments[0])
+                # User is trying to set modes
                 else:
-                    self.num_403_no_such_channel(arguments[0])
-            # User is trying to set modes
+                    self._server.channels[arguments[0]].handle_mode(self, " ".join(arguments[1:]))
             else:
-                pass
+                self.num_403_no_such_channel(arguments[0])
         # User
         else:
             self.handle_modes(
