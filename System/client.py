@@ -69,7 +69,6 @@ class Client(object):
                 return False
         except (OSError, BrokenPipeError):
             self.terminate()
-        # return self._handle.send((buffer + "\r\n").encode("ascii"))
 
     # Main thread loop
     def loop(self):
@@ -299,7 +298,7 @@ class Client(object):
             self.num_221_user_modes()
 
     # BROADCAST: "MODE"
-    def broadcast_modes(self, modes):
+    def broadcast_mode(self, modes):
         return self.write(self.substitute(":{identifier} MODE {nick} " + modes))
 
     # NOTICE "AUTH"
@@ -782,25 +781,25 @@ class Client(object):
     def mode_i(self, mode, arguments):
         if "i" not in self.modes and mode == "+":
             self.modes.append("i")
-            return self.broadcast_modes("+i")
+            return self.broadcast_mode("+i")
         elif "i" in self.modes and mode == "-":
             self.modes.remove("i")
-            return self.broadcast_modes("-i")
+            return self.broadcast_mode("-i")
 
     # MODE: "w"
     def mode_w(self, mode, arguments):
         if "w" not in self.modes and mode == "+":
             self.modes.append("w")
-            return self.broadcast_modes("+w")
+            return self.broadcast_mode("+w")
         elif "w" in self.modes and mode == "-":
             self.modes.remove("w")
-            return self.broadcast_modes("-w")
+            return self.broadcast_mode("-w")
 
     # MODE: "x"
     def mode_x(self, mode, arguments):
         if "x" not in self.modes and mode == "+":
             self.modes.append("x")
-            return self.broadcast_modes("+x")
+            return self.broadcast_mode("+x")
         elif "x" in self.modes and mode == "-":
             self.modes.remove("x")
-            return self.broadcast_modes("-x")
+            return self.broadcast_mode("-x")
