@@ -499,6 +499,10 @@ class Client(object):
     def num_432_nick_already_taken(self, nick):
         self.write(self.substitute(":{fqdn} 432 {nick} " + nick + " :Nickname is already in use"))
 
+    # NUMERIC: 441 "THEY AREN'T ON CHANNEL"
+    def num_441_they_arent_on_channel(self, channel, target):
+        self.write(self.substitute(":{fqdn} 441 {nick} {0} {1} :They aren't on that channel".format(target, channel)))
+
     # NUMERIC: 442 "NOT ON CHANNEL"
     def num_442_not_on_channel(self, channel):
         self.write(self.substitute(":{fqdn} 442 " + channel + " :You're not on that channel"))
@@ -583,7 +587,8 @@ class Client(object):
         elif arguments[0][0] == "#":
             arguments[0] = arguments[0].lower()
 
-            if arguments[0] in self.channels:
+            # Channel exists
+            if arguments[0] in self._server.channels:
                 # User is asking for modes of the channel
                 if len(arguments) == 1:
                     self.num_324_channel_modes(arguments[0])
@@ -591,6 +596,7 @@ class Client(object):
                 # User is trying to set modes
                 else:
                     self._server.channels[arguments[0]].handle_mode(self, " ".join(arguments[1:]))
+            # Channel doesn't exist
             else:
                 self.num_403_no_such_channel(arguments[0])
         # User
