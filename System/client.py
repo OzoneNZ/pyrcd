@@ -508,6 +508,10 @@ class Client(object):
     def num_451_not_registered(self, command):
         self.write(self.substitute(":{fqdn} 451 " + command + " :You have not registered"))
 
+    # NUMERIC: 460 "HALFOPS CANNOT SET MODE"
+    def num_460_halfops_cannot_set_mode(self, mode):
+        self.write(self.substitute(":{fqdn} 460 {nick} :Halfops cannot set mode " + mode))
+
     # NUMERIC: 461 "MORE PARAMETERS"
     def num_461_more_parameters(self, command):
         self.write(self.substitute(":{fqdn} 461 {nick} " + command + " :Not enough parameters"))
