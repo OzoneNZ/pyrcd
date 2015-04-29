@@ -5,6 +5,14 @@ class IRC(object):
         "x": 0
     }
 
+    channel_modes = {
+        "q": 1,
+        "a": 1,
+        "o": 1,
+        "h": 1,
+        "v": 1
+    }
+
     channel_power_symbols = ["q", "a", "o", "h", "v"]
 
     channel_powers = {
@@ -51,7 +59,13 @@ class IRC(object):
                 if valid_modes[char] > 0:
                     for parameter in range(valid_modes[char]):
                         if len(arguments) >= count + 1:
-                            output.append({"mode": mode, "type": char, "arguments": arguments})
+                            print(count, count+valid_modes[char])
+                            output.append({
+                                "mode": mode,
+                                "type": char,
+                                "arguments": " ".join(arguments[count:count+valid_modes[char]])
+                            })
+
                             count += 1
                 else:
                     output.append({"type": mode, "mode": char, "arguments": None})
