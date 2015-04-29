@@ -115,7 +115,49 @@ class Channel(object):
                 pass
 
     def mode_o(self, client, mode, arguments):
-        if "o" in client.channel_modes[self.name]:
-            pass
+        nick_lower = arguments.lower()
+
+        # Client is actually in this channel
+        if self.name in client.channels:
+            # User has op
+            if "o" in client.channel_modes[self.name]:
+                # User isn't trying to set op on themseves
+                if nick_lower != client.nick.lower():
+                    # Target is actually online
+                    if nick_lower in self._server.nicks:
+                        # Target is in this channel
+                        if self._server.clients[self._server.nicks[nick_lower]] in self.clients:
+                            target = self._server.clients[self._server.nicks[nick_lower]]
+                            process = False
+
+                            # User is trying to grant op
+                            if mode == "+" and "o" not in target.channel_modes[self.name]:
+                                target.channel_modes[self.name].append("o")
+                                process = True
+                            # User is trying to remove op
+                            elif mode == "-" and "o" in target.channel_modes[self.name]:
+                                target.channel_modes[self.name].remove("o")
+                                process = True
+
+                            if process:
+                                self.broadcast_inclusive(":{0} MODE {1} {2}o {3}".format(
+                                    client.get_identifier(),
+                                    self.name,
+                                    mode,
+                                    target.nick
+                                ))
+                        # Target is not in this channel
+                        else:
+                            client.num_441_they_arent_on_channel(self.name, arguments)
+                    # Target doesn't exist
+                    else:
+                        client.num_401_no_such_recipient(arguments)
+            # User has halfop
+            elif "h" in client.channel_modes[self.name]:
+                client.num_460_halfops_cannot_set_mode("o")
+            # User has no relevant power
+            else:
+                client.num_482_not_channel_operator(self.name)
+        # Client isn't in this channel
         else:
-            client.num_482_not_channel_operator(self.name)
+            client.num_482_not_channel_operator()
