@@ -59,7 +59,6 @@ class IRC(object):
                 if valid_modes[char] > 0:
                     for parameter in range(valid_modes[char]):
                         if len(arguments) >= count + 1:
-                            print(count, count+valid_modes[char])
                             output.append({
                                 "mode": mode,
                                 "type": char,
@@ -68,6 +67,6 @@ class IRC(object):
 
                             count += 1
                 else:
-                    output.append({"type": mode, "mode": char, "arguments": None})
+                    output.append({"type": char, "mode": mode, "arguments": None})
 
         return output
