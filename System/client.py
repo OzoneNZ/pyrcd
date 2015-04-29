@@ -289,10 +289,11 @@ class Client(object):
 
             if len(modes):
                 for bunch in modes:
-                    method = getattr(self, "mode_" + bunch["mode"])
-
-                    if method:
-                        method(bunch["type"], bunch["arguments"])
+                    try:
+                        method = getattr(self, "mode_" + bunch["type"])
+                        method(bunch["mode"], bunch["arguments"])
+                    except AttributeError:
+                        pass
         else:
             # User getting their own mode string
             self.num_221_user_modes()
