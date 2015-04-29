@@ -95,3 +95,27 @@ class Channel(object):
         # Client in not in channel
         else:
             client.num_442_not_on_channel(self.name)
+
+    def handle_mode(self, client, arguments):
+        arguments = arguments.split(" ")
+        modes = arguments[0]
+
+        if len(arguments) >= 2:
+            arguments = arguments[1:]
+        else:
+            arguments = []
+
+        modes = IRC.mode_deconstruct(IRC.channel_modes, modes, arguments)
+
+        for bunch in modes:
+            try:
+                method = getattr(self, "mode_" + bunch["type"])
+                method(client, bunch["mode"], bunch["arguments"])
+            except AttributeError:
+                pass
+
+    def mode_o(self, client, mode, arguments):
+        if "o" in client.channel_modes[self.name]:
+            pass
+        else:
+            client.num_482_not_channel_operator(self.name)
