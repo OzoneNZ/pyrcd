@@ -126,21 +126,58 @@ class Client(object):
     # Reverse DNS lookup
     def lookup_hostname(self):
         self.notice_auth("Looking up your hostname...")
+        hostname = False
+        log_output = ""
+        client_output = ""
 
-        try:
-            hostname = socket.gethostbyaddr(self.ip_address)
+        # Lookup exists
+        if self.ip_address in self._server.hostnames.keys():
+            # Record is older than 1 hour, flush it
+            if time.time() - self._server.hostnames[self.ip_address]["time"] >= 3600:
+                self._server.hostnames.pop(self.ip_address, None)
 
-            if len(hostname) == 3:
-                self.hostname = hostname[0]
-                self.notice_auth("Found your hostname (" + self.hostname + ")")
-                self._server.log.custom("LOOKUP", "{0} resolves to {1}".format(self.ip_address, self.hostname))
+                hostname = self._server.resolve_ip_address(self.ip_address)
+
+                if hostname:
+                    self.hostname = hostname
+                    self._server.hostnames[self.ip_address] = {"time": time.time(), "result": self.hostname}
+                    log_output = "{0} resolves to {1} (cached)"
+                    client_output = "Found your hostname (" + self.hostname + ")"
+                else:
+                    self._server.hostnames[self.ip_address] = {"time": time.time(), "result": None}
+                    log_output = "{0} is unresolvable (cached)"
+                    client_output = "Unable to resolve IP address (" + self.hostname + ")"
+            # Use cached result
             else:
-                raise socket.herror()
-        except socket.herror:
-            self.notice_auth("Failed to lookup your hostname, using IP address instead (" + self.ip_address + ")")
-            self._server.log.custom("LOOKUP", "{0} failed to resolve, continuing with IP address".format(self.ip_address))
+                # Failed lookup is cached
+                if self._server.hostnames[self.ip_address]["result"] is None:
+                    self.hostname = self.ip_address
+                    log_output = "{0} is unresolvable (cached)"
+                    client_output = "Unable to resolve IP address (" + self.hostname + ")"
+                # Successful lookup is cached
+                else:
+                    self.hostname = self._server.hostnames[self.ip_address]["result"]
+                    log_output = "{0} resolves to {1} (cached)"
+                    client_output = "Cached your hostname (" + self.hostname + ")"
+        # New host, no cache record at all
+        else:
+            hostname = self._server.resolve_ip_address(self.ip_address)
 
-    # Dynamic client hostname, depending on modes (not implemented yet)
+            if hostname:
+                self.hostname = hostname
+                self._server.hostnames[self.ip_address] = {"time": time.time(), "result": self.hostname}
+                log_output = "{0} resolves to {1}"
+                client_output = "Found your hostname (" + self.hostname + ")"
+            else:
+                self.hostname = self.ip_address
+                self._server.hostnames[self.ip_address] = {"time": time.time(), "result": None}
+                log_output = "{0} is unresolvable"
+                client_output = "Unable to resolve IP address (" + self.hostname + ")"
+
+        self._server.log.custom("LOOKUP", log_output.format(self.ip_address, self.hostname))
+        self.notice_auth(client_output)
+
+# Dynamic client hostname, depending on modes (not implemented yet)
     def get_hostname(self):
         if "x" in self.modes:
             return self.masked_hostname

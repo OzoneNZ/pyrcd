@@ -18,6 +18,9 @@ class Server(object):
         self.config = None
         self.log = None
 
+        # Cached hostnames
+        self.hostnames = {}
+
         self.max_clients = 0
         self.clients = {}
         self.nicks = {}
@@ -46,6 +49,18 @@ class Server(object):
             self.inactive_client_check()
 
             time.sleep(1)
+
+    @staticmethod
+    def resolve_ip_address(ip_address):
+        try:
+            hostname = socket.gethostbyaddr(ip_address)
+
+            if len(hostname) == 3:
+                return hostname[0]
+            else:
+                raise socket.herror()
+        except socket.herror:
+            return False
 
     def inactive_client_check(self):
         try:
