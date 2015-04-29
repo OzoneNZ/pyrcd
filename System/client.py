@@ -516,6 +516,10 @@ class Client(object):
     def num_462_already_registered(self):
         self.write(self.substitute(":{fqdn} 462 {nick} USER :You may not reregister"))
 
+    # NUMERIC: 482 "NOT CHANNEL OPERATOR"
+    def num_482_not_channel_operator(self, target):
+        self.write(self.substitute(":{fqdn} 482 {nick} " + target + " :You're not channel operator"))
+
     # COMMAND: "CAP"
     def cmd_cap(self, arguments):
         if len(arguments) == 0:
