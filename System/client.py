@@ -501,7 +501,7 @@ class Client(object):
 
     # NUMERIC: 441 "THEY AREN'T ON CHANNEL"
     def num_441_they_arent_on_channel(self, channel, target):
-        self.write(self.substitute(":{fqdn} 441 {nick} {0} {1} :They aren't on that channel".format(target, channel)))
+        self.write(self.substitute(":{fqdn} 441 {nick} {0} {1} :They aren't on that channel").format(target, channel))
 
     # NUMERIC: 442 "NOT ON CHANNEL"
     def num_442_not_on_channel(self, channel):
