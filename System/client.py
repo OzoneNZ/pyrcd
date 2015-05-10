@@ -1,5 +1,5 @@
-import time
 import socket
+import time
 import threading
 
 from System.irc import *
@@ -8,6 +8,8 @@ from System.irc import *
 class Client(object):
     # Class constructor
     def __init__(self, server, handle, address):
+        self.lock = threading.Lock()
+
         # Reset properties
         self.active = True
 
@@ -38,8 +40,19 @@ class Client(object):
         self.hostname = address[0]
         self.masked_hostname = self.calculate_hostname()
 
-        # Enter a continuous loop
-        self.loop()
+        # Register ourselves with the server
+        self._server.register_client(self)
+
+        # Boot the client off the network if we're full
+        if len(self._server.clients) >= self._server.config.server["client_limit"]:
+            self.close_link("Server is full; please try again later")
+
+        # Hostname lookup
+        try:
+            lookup = threading.Thread(target=self.lookup_hostname, args=[])
+            lookup.start()
+        except threading.ThreadError:
+            self.notice_auth("Failed to lookup hostname, using IP address (" + self.address + ") instead")
 
     # String value substitution for quicker reply-building
     def substitute(self, buffer):
@@ -70,49 +83,7 @@ class Client(object):
         except (OSError, BrokenPipeError):
             self.terminate()
 
-    # Main thread loop
-    def loop(self):
-        self._server.register_client(self)
-
-        # Boot the client off the network if we're full
-        if len(self._server.clients) >= self._server.config.server["client_limit"]:
-            return self.close_link("Server is full; please try again later")
-
-        # Hostname lookup
-        try:
-            lookup = threading.Thread(target=self.lookup_hostname, args=[])
-            lookup.start()
-        except threading.ThreadError:
-            self.notice_auth("Failed to lookup hostname, using IP address (" + self.address + ") instead")
-
-        # Loop indefinitely
-        while True:
-            # Break out if thread has been "killed"
-            if not self.active:
-                break
-
-            try:
-                data = []
-                buffer = self._handle.recv(self._server.config.server["recv_buffer"])
-                buffer = buffer.decode()
-
-                for line in buffer.split("\n"):
-                    if len(line):
-                        data.append(line)
-            except OSError:
-                break
-
-            for line in data:
-                if self.active:
-                    self.handle_data(line)
-                else:
-                    break
-
-        # Kill the thread if main thread hasn't already done so
-        if self.active:
-            self.terminate()
-
-    # Kill thread
+    # Kill client
     def terminate(self):
         self.active = False
         self._server.deregister_client(self)
@@ -125,6 +96,8 @@ class Client(object):
 
     # Reverse DNS lookup
     def lookup_hostname(self):
+        self.lock.acquire()
+
         self.notice_auth("Looking up your hostname...")
         hostname = False
         log_output = ""
@@ -176,8 +149,9 @@ class Client(object):
 
         self._server.log.custom("LOOKUP", log_output.format(self.ip_address, self.hostname))
         self.notice_auth(client_output)
+        self.lock.release()
 
-# Dynamic client hostname, depending on modes (not implemented yet)
+    # Dynamic client hostname, depending on modes (not implemented yet)
     def get_hostname(self):
         if "x" in self.modes:
             return self.masked_hostname
@@ -202,7 +176,7 @@ class Client(object):
 
     # Pulls out the command+arguments and passes them on
     def handle_data(self, arguments):
-        arguments = arguments.strip("\r\n").split(" ")
+        arguments = arguments.strip("\n").split(" ")
 
         if len(arguments) < 1:
             return False
@@ -259,9 +233,8 @@ class Client(object):
 
     # Terminates client prematurely
     def close_link(self, buffer):
-        if self.active:
-            self.write(self.substitute("ERROR :Closing Link: {nick}[{hostname}] (" + buffer + ")"))
-            self.terminate()
+        self.write(self.substitute("ERROR :Closing Link: {nick}[{hostname}] (" + buffer + ")"))
+        self.terminate()
 
     # Called each time a NICK/USER call is made
     def check_authorisation(self):

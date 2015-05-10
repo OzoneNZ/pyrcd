@@ -1,5 +1,6 @@
-import socket
+import select
 
+from System.client import *
 from System.channel import *
 
 
@@ -11,12 +12,11 @@ class Server(object):
         # Reset properties
         self._handle = None
         self.revision = 0.1
-
-        self.active = True
         self.started = time.time()
 
         self.config = None
         self.log = None
+        self.sockets = []
 
         # Cached hostnames
         self.hostnames = {}
@@ -41,14 +41,49 @@ class Server(object):
         self.config = config
         self.log = log
 
-    def accept(self):
-        return self._handle.accept()
+    def tick(self):
+        self.sockets.append(self._handle)
+        last_check = time.time()
 
-    def loop(self):
-        while self.active:
-            self.inactive_client_check()
+        while True:
+            # Mass ping/alive checks
+            if time.time() - last_check > 1:
+                self.inactive_client_check()
 
-            time.sleep(1)
+            # Run select() on the list of socks
+            read_socks, write_socks, error_socks = select.select(self.sockets, [], [], 0)
+
+            # Loop through changed sockets
+            for sock in read_socks:
+                # Client connection pending
+                if sock == self._handle:
+                    client_sock = self._handle.accept()[0]
+                    self.sockets.append(client_sock)
+
+                    ip_address, port = client_sock.getpeername()
+                    index = "{0}:{1}".format(ip_address, port)
+                    self.clients[index] = Client(self, client_sock, (ip_address, port))
+                # Incoming client data
+                else:
+                    ip_address, port = sock.getpeername()
+                    index = "{0}:{1}".format(ip_address, port)
+                    data = sock.recv(self.config.server["recv_buffer"])
+
+                    # Successfully read data
+                    if data:
+                        # Loop through line-by-line
+                        for line in data.decode().split("\n"):
+                            if len(line):
+                                self.clients[index].handle_data(line)
+                    # Client disconnected
+                    elif not data and self.clients[index].active:
+                        self.clients[index].terminate()
+
+                    if index not in self.clients:
+                        self.sockets.remove(sock)
+
+            # Pause for 10 milliseconds to prevent excessive CPU usage
+            time.sleep(0.01)
 
     @staticmethod
     def resolve_ip_address(ip_address):
@@ -78,7 +113,7 @@ class Server(object):
                 # Check for clients that haven't authorised in >=10 seconds
                 if hasattr(client, "connected"):
                     if not client.authorised:
-                        if time.time() - client.connected >= 10:
+                        if time.time() - client.connected >= 60:
                             client.close_link("Ping timeout: {0:.0f} seconds".format(time.time() - client.connected))
         except RuntimeError:
             pass
@@ -135,7 +170,6 @@ class Server(object):
                     completed.append(server_client)
 
     def terminate(self):
-        self.active = False
         self._handle.close()
 
     def register_channel(self, channel, channel_object):
@@ -149,7 +183,7 @@ class Server(object):
     def channel_exists(self, channel):
         return channel.lower() in self.channels
 
-    def terminate_all(self):
+    def terminate_clients(self):
         for client in set(self.clients):
             self.clients[client].active = False
             self.clients[client].terminate()

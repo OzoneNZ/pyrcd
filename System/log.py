@@ -15,7 +15,7 @@ class Log(object):
     # Logging "labels" - first indice is the debug level, second is the console colour
     labels = {
         # Top levels
-        "INFO": (0, -1, "BLUE"),
+        "INFO": (0, -1, "CYAN"),
         "WARNING": (0, -1, "YELLOW"),
         "ERROR": (0, -1, "RED"),
 
