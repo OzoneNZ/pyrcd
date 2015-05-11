@@ -5,7 +5,7 @@
   },
 
   "server": {
-    "debug": 3,
+    "debug": 1,
     "fqdn": "irc.localhost",
     "name": "pyrcd daemon",
     "client_limit": 10,
