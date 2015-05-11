@@ -80,7 +80,7 @@ class Channel(object):
             message = client.substitute(":{identifier} PRIVMSG {0} :{1}").format(self.name, text)
             self.broadcast_exclusive(client, message)
 
-            self._server.log.custom("PRIVMSG", "[{0} to {1}]: {2}".format(self.name, client.name, text))
+            self._server.log.custom("PRIVMSG", "[{0} to {1}]: {2}".format(client.name, self.name, text))
         # Client in not in channel
         else:
             client.num_442_not_on_channel(self.name)
@@ -91,7 +91,7 @@ class Channel(object):
             message = client.substitute(":{identifier} NOTICE {0} :{1}").format(self.name, text)
             self.broadcast_exclusive(client, message)
 
-            self._server.log.custom("NOTICE", "[{0} to {1}]: {2}".format(self.name, client.name, text))
+            self._server.log.custom("NOTICE", "[{0} to {1}]: {2}".format(client.name, self.name, text))
         # Client in not in channel
         else:
             client.num_442_not_on_channel(self.name)
