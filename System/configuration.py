@@ -29,8 +29,8 @@ class Configuration(object):
         self.bind = configuration["bind"]
         self.server = configuration["server"]
 
-        self.motd["content"], self.motd["modified"] = self.read_file(path + "motd.txt")
-        self.rules["content"], self.rules["modified"] = self.read_file(path + "rules.txt")
+        self.motd["content"], self.motd["modified"] = self.read_file(path + self.server["motd"])
+        self.rules["content"], self.rules["modified"] = self.read_file(path + self.server["rules"])
 
     @staticmethod
     def read_file(file):
